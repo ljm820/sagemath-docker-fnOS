@@ -27,8 +27,12 @@ jobs:
       - name: Run static security scan
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          skillspector scan . --no-llm --format sarif    --output report.sarif || true
-          skillspector scan . --no-llm --format markdown --output report.md || true
+          # 加大 OSV.dev 请求超时, 避免网络抖动被误报为 "SC4 fallback" 问题
+          export SKILLSPECTOR_OSV_TIMEOUT=60
+          BASELINE_ARGS=()
+          if [ -f .skillspector-baseline.yaml ]; then BASELINE_ARGS=(--baseline .skillspector-baseline.yaml); fi
+          skillspector scan . --no-llm "${BASELINE_ARGS[@]}" --format sarif    --output report.sarif || true
+          skillspector scan . --no-llm "${BASELINE_ARGS[@]}" --format markdown --output report.md || true
 
       - name: Upload reports
         uses: actions/upload-artifact@v4
