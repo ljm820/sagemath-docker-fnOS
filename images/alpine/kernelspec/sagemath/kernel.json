@@ -1,0 +1,5 @@
+{
+  "argv": ["/usr/local/bin/sage", "--python", "-m", "sage.repl.ipython_kernel", "-f", "{connection_file}"],
+  "display_name": "SageMath (experimental)",
+  "language": "python"
+}

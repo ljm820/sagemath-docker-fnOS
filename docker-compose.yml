@@ -1,0 +1,47 @@
+# =============================================================================
+# SageMath + JupyterLab 编排文件 (用于飞牛OS / 任何 Docker 主机)
+#
+# 用法:
+#   cp .env.example .env
+#   docker compose up -d            # 默认启动 debian12 版本
+#   docker compose up -d fedora36   # 启动 Fedora 36 版本
+#   docker compose up -d alpine     # 启动 Alpine 实验版本
+#
+# 首次使用请先构建镜像:
+#   ./scripts/build.sh all          # 构建全部镜像 (或 docker compose build)
+# =============================================================================
+
+x-common: &common
+  restart: unless-stopped
+  init: true
+  environment:
+    JUPYTER_TOKEN: ${JUPYTER_TOKEN:-sagemath}
+    JUPYTER_PORT: "8888"
+    WORK_DIR: /home/sage/work
+  volumes:
+    - ${WORK_DATA:-./work}:/home/sage/work
+
+services:
+  debian12:
+    <<: *common
+    image: ${IMAGE_PREFIX:-ljm820/sagemath-fnos}:debian12-sage9.5
+    build: ./images/debian12
+    container_name: sagemath-debian12
+    ports:
+      - "${DEBIAN_PORT:-8888}:8888"
+
+  fedora36:
+    <<: *common
+    image: ${IMAGE_PREFIX:-ljm820/sagemath-fnos}:fedora36-sage9.6
+    build: ./images/fedora36
+    container_name: sagemath-fedora36
+    ports:
+      - "${FEDORA_PORT:-8889}:8888"
+
+  alpine:
+    <<: *common
+    image: ${IMAGE_PREFIX:-ljm820/sagemath-fnos}:alpine-sage10x-experimental
+    build: ./images/alpine
+    container_name: sagemath-alpine
+    ports:
+      - "${ALPINE_PORT:-8890}:8888"

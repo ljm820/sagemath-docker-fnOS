@@ -1,0 +1,75 @@
+# =============================================================================
+# SkillSpector 基线文件 (本仓库)
+#
+# 背景: SkillSpector 面向 "AI Agent skill" 设计; 本项目为 Docker 部署工程。
+#       下表命中已逐条人工核实, 均为部署工程中正常写法的误报, 故纳入基线。
+#       纳入基线后, 后续扫描只报告"新增"发现, 便于追踪真实风险。
+#
+# 使用: skillspector scan . --no-llm --baseline .skillspector-baseline.yaml
+# 参考: https://github.com/NVIDIA/SkillSpector (docs/SUPPRESSION.md)
+# 审计说明: 完整的逐条审阅记录见 docs/SECURITY.md
+# =============================================================================
+
+version: 2
+scanner_version: "2.5.1"
+
+rules:
+  # ---- PE3 Credential Access ----
+  # 命中均为文档/配置中关于 .env 占位符、Jupyter 令牌、GitHub PAT 的"安全说明",
+  # 不含任何凭据读取、收集或外泄逻辑。
+  - id: "PE3"
+    path: "docs/security/*"
+    reason: "扫描报告自身引用了 PE3 消息文本, 属审计产物自引用; 报告是安全输出而非凭据访问代码"
+  - id: "PE3"
+    path: "docs/*"
+    reason: "文档仅描述 .env / Jupyter 令牌 / GitHub PAT 的占位符配置与安全建议, 不含凭据读取或外泄"
+  - id: "PE3"
+    path: "README.md"
+    reason: "README 说明 .env 与令牌用法, 均为占位符而非真实密钥"
+  - id: "PE3"
+    path: "docker-compose.yml"
+    reason: "compose 通过环境变量注入 Jupyter 令牌, 属标准配置模式, 未读取任何凭据文件"
+  - id: "PE3"
+    path: "fnos/deploy.sh"
+    reason: "脚本仅提示用户阅读 .env 并打印令牌提示, 不读取或外传任何密钥"
+
+  # ---- TM1 Tool Parameter Abuse / TM2 Chaining Abuse ----
+  # Dockerfile 中 apt/dnf/pip 的 -y 与 rm -rf 缓存清理、RUN 层 && 链式命令
+  # 是容器构建的标准写法, 在隔离构建环境中执行。
+  - id: "TM1"
+    path: "images/*/Dockerfile"
+    reason: "apt/dnf/pip 的 -y 与 rm -rf 缓存清理是标准容器构建写法, 无工具参数滥用"
+  - id: "TM2"
+    path: "images/*/Dockerfile"
+    reason: "RUN 层 && 链式命令是标准构建模式, 非工具链投毒"
+
+  # ---- RP1 Unpinned Docker Image ----
+  # 镜像标签在 build.sh / run.sh / docker-compose.yml 中已显式固定
+  # (debian12-sage9.5 / fedora36-sage9.6 / alpine-sage10x-experimental)。
+  - id: "RP1"
+    path: "docs/*"
+    reason: "文档示例使用 docker run 演示命令, 实际镜像标签已在脚本/compose 中显式固定"
+  - id: "RP1"
+    path: "tests/*"
+    reason: "测试脚本通过 IMAGE 环境变量传入已打标签的镜像"
+  - id: "RP1"
+    path: "scripts/*"
+    reason: "镜像标签在脚本内通过 IMAGE_PREFIX + TAG 映射显式固定"
+
+  # ---- RA2 Session Persistence ----
+  - id: "RA2"
+    reason: "systemd 单元是用户显式安装的可选服务, 用于容器开机自启, 属预期且用户批准的持久化"
+
+  # ---- EA3 Scope Creep (LICENSE 误判) ----
+  - id: "EA3"
+    reason: "LICENSE 文件被误判为范围蔓延, 无任何功能影响"
+
+  # ---- E1 External Transmission (文档中的操作命令) ----
+  - id: "E1"
+    path: "docs/*"
+    reason: "git clone / curl 是仓库与镜像的文档化操作示例, 属预期命令而非数据外泄"
+
+  # ---- TM1 Tool Parameter Abuse (tests/smoke.sh) ----
+  - id: "TM1"
+    path: "tests/*"
+    reason: "docker run 的 --rm 与 -v 挂载标志被误读为工具参数滥用, 属标准容器测试写法"

@@ -1,0 +1,7 @@
+# SageMath 本体 (仅源码包, 在 Alpine/musl 上为实验性源码构建)
+sagemath-standard==10.4
+jupyterlab==4.6.2
+ipykernel==7.3.0
+ipywidgets==8.1.8
+notebook==7.6.1
+jupyter-server==2.20.0

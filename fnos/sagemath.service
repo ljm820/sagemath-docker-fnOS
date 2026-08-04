@@ -1,0 +1,24 @@
+# SageMath + JupyterLab 系统服务 (可选, 用于随系统开机自启)
+# 安装步骤:
+#   1. 确保容器已通过 deploy.sh 或 docker compose 正常启动过
+#   2. 将本文件复制到 /etc/systemd/system/sagemath.service
+#   3. systemctl daemon-reload
+#   4. systemctl enable --now sagemath
+# 说明: fnOS 的 Docker 容器建议使用 compose 的 restart: unless-stopped,
+#       此 unit 仅作为补充。若两者同时启用, 请保留其一, 避免冲突。
+[Unit]
+Description=SageMath JupyterLab (Debian 12 flavor)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/vol1/1000/docker/sagemath
+ExecStart=/usr/bin/docker compose up -d debian12
+ExecStop=/usr/bin/docker compose stop debian12
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target

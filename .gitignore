@@ -3,6 +3,15 @@
 .gemini
 .opencode
 
+# SageMath 项目本地配置与数据
+/.env
+/work/
+/jupyter_config/
+
+# SkillSpector 机器可读报告 (保留 markdown 报告, 忽略 json/sarif 中间产物)
+/docs/security/*.json
+/docs/security/*.sarif
+
 # IDE and Editors
 **/.idea/
 **/.vscode/
