@@ -8,6 +8,7 @@ SageMath 镜像版本，附带一键构建、运行、迁移、测试脚本，�
 ## 特性
 
 - 三种基础镜像、三个 SageMath 版本矩阵
+- **v2.0 新增**：科学仪器数据分析环境（XRD / EDS / XAS），详见 [docs/SCIENCE.md](docs/SCIENCE.md)
 - 非 root 用户（`sage`，uid=1000）运行，方便 NAS 数据卷权限对齐
 - `tini` 作为 PID 1 + compose `init: true`，信号处理正确
 - JupyterLab 4 + SageMath 内核开箱即用，令牌鉴权
@@ -15,6 +16,13 @@ SageMath 镜像版本，附带一键构建、运行、迁移、测试脚本，�
 - 飞牛OS 专用部署手册与 systemd 可选自启单元
 - 集成 NVIDIA SkillSpector 安全扫描（静态分析 + 可选 LLM 语义分析）
 - GitHub Actions 每次推送自动执行安全扫描并产出报告
+
+## 版本
+
+| 版本 | 内容 | Release |
+|------|------|---------|
+| v1.1 | SageMath 9.5 + JupyterLab（debian12 生产版，修复归档加载问题） | [v1.1](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v1.1) |
+| **v2.0** | **v1.1 + 科学仪器数据分析环境（XRD/EDS/XAS）** | [v2.0](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v2.0) |
 
 ## 镜像矩阵
 

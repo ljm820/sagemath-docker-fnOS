@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-.PHONY: help build build-debian12 build-fedora36 build-alpine up down restart logs test test-debian12 test-fedora36 test-alpine security-scan push clean
+.PHONY: help build build-debian12 build-fedora36 build-alpine up down restart logs test test-debian12 test-fedora36 test-alpine test-sci security-scan push clean
 
 help:
 	@echo "可用目标:"
@@ -12,6 +12,7 @@ help:
 	@echo "  restart          重启所有容器"
 	@echo "  logs             查看 debian12 容器日志"
 	@echo "  test             运行全部镜像冒烟测试"
+	@echo "  test-sci         运行 v2.0 科学环境测试 (XRD/EDS/XAS)"
 	@echo "  security-scan    运行 NVIDIA SkillSpector 安全扫描"
 	@echo "  push             推送镜像到仓库 (先 docker login)"
 	@echo "  clean            停止容器并清理本地构建缓存"
@@ -51,6 +52,9 @@ test-fedora36:
 
 test-alpine:
 	./scripts/test.sh alpine
+
+test-sci:
+	./scripts/test-sci.sh
 
 security-scan:
 	./scripts/security-scan.sh

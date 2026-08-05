@@ -1,0 +1,45 @@
+# =============================================================================
+# v2.0 科学仪器数据分析环境依赖 (XRD / EDS / XAS)
+#
+# 安装于独立 venv /opt/sci-env (Python 3.11), 与 SageMath 系统环境隔离。
+# 版本策略参考 github.com/ljm820/pyXRD_EDS_XAS_Env (v1), 适配 Python 3.11。
+# pymatgen 固定 2025.10.7: 2026.x 重构 pymatgen.core 为命名空间包,
+#   会导致 crystal_toolkit / pymatviz 的 from pymatgen.core import ... 失败。
+#
+# 说明:
+#   - torch (CPU)、PyXplore、ovito 在 Dockerfile 中单独安装 (特殊 index/参数)
+#   - ovito-pro 为商业桌面版, 需授权; 镜像内提供免费 ovito Python 模块
+# =============================================================================
+
+# ---- 核心科学计算 ----
+numpy
+scipy
+pandas
+matplotlib
+scikit-learn
+scikit-image
+sympy
+h5py
+dask[array]
+numba
+pybaselines
+
+# ---- Jupyter 内核与交互 ----
+ipykernel
+ipywidgets
+ipympl
+
+# ---- 材料计算与晶体 ----
+ase
+pymatgen==2025.10.7
+crystal-toolkit
+pymatviz
+
+# ---- 科学仪器数据格式读取 ----
+# RosettaSciIO + HyperSpy: 40+ 仪器格式自动化读取 (含 EDAX 等)
+rosettasciio
+hyperspy[all]
+# xraylarch: XAS / EXAFS / XANES / XRF 吸收谱分析
+xraylarch
+# pywbem: WBEM/CIM 协议 (用户指定; 用于网络管理类数据互通)
+pywbem

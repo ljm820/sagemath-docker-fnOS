@@ -183,3 +183,6 @@
 *.lz
 *.lzma
 *.iso
+
+# 上传脚本含敏感 token，禁止提交
+upload_github_repo.sh
