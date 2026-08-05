@@ -1,0 +1,29 @@
+# =============================================================================
+# SageMath + JupyterLab 部署文件 (飞牛OS fnOS / Docker)
+#
+# 使用前提: 本地已存在镜像 sagemath9.5_deb12_julab:latest
+#   下载最新修复版镜像并加载 (load 后 tag 即为 sagemath9.5_deb12_julab:latest, 无需手动 tag):
+#     https://github.com/ljm820/sagemath-docker-fnOS/releases/download/v1.0.0/sagemath9.5_deb12_julab_latest.tar.gz
+#     docker load -i sagemath9.5_deb12_julab_latest.tar.gz
+#   若仍使用旧镜像, 下方 command 会显式启动 jupyter, 不受镜像默认 CMD 影响。
+#
+# 启动: docker compose up -d
+# 访问: http://<NAS-IP>:36888  (令牌见 JUPYTER_TOKEN)
+# 数据: 挂载 /vol1/1000/_0.DataStation/_0.dockerStation/sagemath_lvscript_docker/workspace
+# =============================================================================
+services:
+  sagemath:
+    image: sagemath9.5_deb12_julab:latest
+    container_name: sagemath-debian12
+    restart: unless-stopped
+    ports:
+      - "36888:8888"
+    environment:
+      # 登录令牌, 请替换为你的强密码
+      - JUPYTER_TOKEN=change_me_to_your_token
+      - TZ=Asia/Shanghai
+    volumes:
+      - /vol1/1000/_0.DataStation/_0.dockerStation/sagemath_lvscript_docker/workspace:/home/sage/work
+    # 显式启动命令, 不依赖镜像默认 CMD (规避 "no command specified")
+    # --ServerApp.token 与 --NotebookApp.token 均在 jupyter-server 2.20 验证可用
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --ServerApp.token=change_me_to_your_token
