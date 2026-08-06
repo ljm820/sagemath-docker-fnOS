@@ -74,7 +74,7 @@ GitHub Release 单资产上限 2GB，v2.0 镜像压缩包 2.17GB 拆为 2 个分
 ```bash
 cat sagemath9.5_deb12_julab_v2.0.tar.gz.part_aa sagemath9.5_deb12_julab_v2.0.tar.gz.part_ab \
   > sagemath9.5_deb12_julab_v2.0.tar.gz
-sha256sum sagemath9.5_deb12_julab_v2.0.tar.gz   # 校验 c881c1a6...
+sha256sum sagemath9.5_deb12_julab_v2.0.tar.gz   # 校验 bf293a61...
 docker load -i sagemath9.5_deb12_julab_v2.0.tar.gz
 docker run -d -p 8888:8888 sagemath9.5_deb12_julab:latest
 ```

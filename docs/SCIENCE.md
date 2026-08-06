@@ -142,18 +142,22 @@ v2.0 镜像同时提供两种获取方式：
 cat sagemath9.5_deb12_julab_v2.0.tar.gz.part_aa sagemath9.5_deb12_julab_v2.0.tar.gz.part_ab \
   > sagemath9.5_deb12_julab_v2.0.tar.gz
 sha256sum sagemath9.5_deb12_julab_v2.0.tar.gz
-# c881c1a6c929826e04f3ba2dafa955ceb54b1010c1a2012de13922c99f61d878
+# bf293a618edd00df57eb7d5f627d77ccedf2a81e92cd8f05cefbd7b081c147de
 docker load -i sagemath9.5_deb12_julab_v2.0.tar.gz
 docker run -d -p 8888:8888 sagemath9.5_deb12_julab:latest
 ```
+
+> 2026-08-06 修复：镜像 config 的 `rootfs.diff_ids` 此前缺少 `sha256:` 前缀，
+> 导致 `docker load` 报 `invalid diffID`。已修正并重新导出、重新分卷上传，
+> 校验值如下表（layer 内容未变）。
 
 ### 镜像校验清单
 
 | 文件 | SHA-256 |
 |------|---------|
-| 合并后完整 tar.gz | `c881c1a6c929826e04f3ba2dafa955ceb54b1010c1a2012de13922c99f61d878` |
-| `.tar.gz.part_aa` | `b8d81790e0d2a27240e913328c911e07fe88671f16d8d238576ffffbaac38855` |
-| `.tar.gz.part_ab` | `212904b398eb40026ab239c1fb1983f0ad7b7839840b1f158412596459ed64c8` |
+| 合并后完整 tar.gz | `bf293a618edd00df57eb7d5f627d77ccedf2a81e92cd8f05cefbd7b081c147de` |
+| `.tar.gz.part_aa` | `ff9ecb142a2f3ebcc54f7b3b18ab83141dab15150c3909ea7e2d681040c624a9` |
+| `.tar.gz.part_ab` | `a6fd52a5b507be778264c9a598d4ac02035f619d754c7592af90f9e39df20622` |
 
 ### 验证结果（构建环境实测）
 
@@ -203,3 +207,19 @@ docker run -d -p 8888:8888 sagemath9.5_deb12_julab:latest
 - 结果：manifest HTTP 201，layer blob 2,186,801,280B 完整，拉取校验 200。
 - 镜像引用：`ghcr.io/ljm820/sagemath-docker-fnos:v2.0`（仓库名全小写，
   符合 OCI 规范）。
+
+### 5. Docker load 校验问题（diffID 前缀）与修复
+
+- **现象**：用户 `docker load` 报 `invalid diffID for layer 0: expected
+  "71005bdf...", got "sha256:71005bdf..."`（layer 2.187GB 加载成功但校验失败）。
+- **根因**：手动构造的 config.json 中 `rootfs.diff_ids` 写成了**裸 hex**
+  （`71005bdf...`），而 Docker 标准要求**带 `sha256:` 前缀**的 digest 格式
+  （`sha256:71005bdf...`）。Docker 校验时用计算值（带前缀）与 config 存储值
+  （裸 hex）比较 → mismatch。layer 内容本身正确。
+- **修复**：`diff_ids` 补 `sha256:` 前缀 → 重新组装 tar.gz → 重新分卷
+  （2 卷，每卷 <2GB）→ 删除并重传 Release 资产 → ghcr 更新 config blob 与
+  manifest（layer blob 不变，内容未变）。
+- **验证**：解压 layer 计算 digest `sha256:71005bdf...` 与 config 存储值完全
+  MATCH；ghcr manifest config digest 已更新为 `20a82a95...`。
+- **教训**：手工构造 docker-archive 时，`rootfs.diff_ids` 必须是
+  `sha256:<hex>` 格式（与 `docker save` 产物一致），不可省略前缀。
