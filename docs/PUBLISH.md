@@ -70,7 +70,61 @@ git commit -m "feat: ..."
 git push
 ```
 
-## 5. 秘钥泄漏应急
+## 5. 发布 v2.0 镜像（GitHub Release + ghcr.io）
+
+### 5.1 GitHub Release 分卷上传（镜像 tar.gz 2.17GB）
+
+GitHub Release 单资产上限 2GB，超大镜像需分卷：
+
+```bash
+# 分卷（每卷 < 2GB）
+split -b 1083058948 sagemath9.5_deb12_julab_v2.0.tar.gz \
+  sagemath9.5_deb12_julab_v2.0.tar.gz.part_
+
+# 生成校验清单
+sha256sum sagemath9.5_deb12_julab_v2.0.tar.gz sagemath9.5_deb12_julab_v2.0.tar.gz.part_*
+
+# 创建 Release（tag v2.0）
+curl -X POST -H "Authorization: Bearer $PAT" -H "Accept: application/vnd.github+json" \
+  -d '{"tag_name":"v2.0","name":"...","body":"..."}' \
+  https://api.github.com/repos/ljm820/sagemath-docker-fnOS/releases
+
+# 上传分卷资产（curl -T 流式，避免 --data-binary 大文件 OOM）
+curl -X POST -H "Authorization: Bearer $PAT" -H "Content-Type: application/gzip" \
+  -T <分卷文件> \
+  "https://uploads.github.com/repos/ljm820/sagemath-docker-fnOS/releases/<RELEASE_ID>/assets?name=<分卷文件名>"
+```
+
+用户侧合并：`cat part_aa part_ab > tar.gz`，sha256 校验后 `docker load -i`。
+
+### 5.2 ghcr.io 镜像推送（无 Docker / podman load 受限时）
+
+沙箱无 Docker，podman 4.3.1 的 `load` / `oci:` transport / `buildah commit` 均有
+限制。最终用 **curl 手动实现 Docker Registry v2 协议** 推送 OCI 镜像：
+
+```bash
+# 1. 构造 OCI 布局（oci-layout + index.json + manifest + config/层 blob）
+# 2. 获取 registry token
+TOKEN=$(curl -s -u "ljm820:$PAT" \
+  "https://ghcr.io/token?scope=repository:ljm820/sagemath-docker-fnos:pull,push&service=ghcr.io" \
+  | python3 -c "import json,sys;print(json.load(sys.stdin)['token'])")
+
+# 3. 上传层 / config（POST 会话 + PUT 流式）
+LOC=$(curl -s -D - -o /dev/null -X POST -H "Authorization: Bearer $TOKEN" \
+  "https://ghcr.io/v2/ljm820/sagemath-docker-fnos/blobs/uploads/" | grep -i '^location:' | awk '{print $2}')
+curl -X PUT -H "Authorization: Bearer $TOKEN" -T layer.tar.gz \
+  "https://ghcr.io${LOC}&digest=sha256:<LAYER_SHA>"
+
+# 4. 打标签
+curl -X PUT -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.oci.image.manifest.v1+json" \
+  --data-binary @manifest.json \
+  "https://ghcr.io/v2/ljm820/sagemath-docker-fnos/manifests/v2.0"
+```
+
+镜像引用：`ghcr.io/ljm820/sagemath-docker-fnos:v2.0`（仓库名全小写）。
+
+## 6. 秘钥泄漏应急
 
 若 PAT 意外泄漏（发送到聊天、提交到仓库），立即到 GitHub
 Settings -> Developer settings -> Personal access tokens 撤销并重新生成，

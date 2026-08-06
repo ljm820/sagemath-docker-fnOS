@@ -184,5 +184,8 @@
 *.lzma
 *.iso
 
+# 大镜像分卷 (Release 资产, 不进 git)
+*.tar.gz.part_*
+
 # 上传脚本含敏感 token，禁止提交
 upload_github_repo.sh

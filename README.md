@@ -56,6 +56,31 @@ sagemath-docker-fnOS/
 
 ## 快速开始（任意 Docker 主机）
 
+### 获取 v2.0 镜像（推荐：ghcr.io 直接拉取）
+
+```bash
+docker pull ghcr.io/ljm820/sagemath-docker-fnos:v2.0
+docker run -d -p 8888:8888 ghcr.io/ljm820/sagemath-docker-fnos:v2.0
+```
+
+浏览器访问 `http://<主机IP>:8888`，访问令牌（Jupyter Token）为 `sagemath`。
+
+### 获取 v2.0 镜像（GitHub Release 分卷）
+
+GitHub Release 单资产上限 2GB，v2.0 镜像压缩包 2.17GB 拆为 2 个分卷。
+下载 [v2.0 Release](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v2.0)
+下全部 2 个分卷后：
+
+```bash
+cat sagemath9.5_deb12_julab_v2.0.tar.gz.part_aa sagemath9.5_deb12_julab_v2.0.tar.gz.part_ab \
+  > sagemath9.5_deb12_julab_v2.0.tar.gz
+sha256sum sagemath9.5_deb12_julab_v2.0.tar.gz   # 校验 c881c1a6...
+docker load -i sagemath9.5_deb12_julab_v2.0.tar.gz
+docker run -d -p 8888:8888 sagemath9.5_deb12_julab:latest
+```
+
+### 本地构建（源码方式）
+
 ```bash
 cp .env.example .env
 ./scripts/build.sh debian12          # 构建镜像
