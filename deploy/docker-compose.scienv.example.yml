@@ -1,0 +1,24 @@
+services:
+  sagemath:
+    image: sagemath9.5_deb12_julab:v1.1
+    container_name: sagemath-scienv_deb12_v3.1
+    restart: unless-stopped
+    ports:
+      - "36888:8888"
+    environment:
+      # 登录令牌, 请替换为你的强密码（command 中的 --ServerApp.token 优先生效）
+      - JUPYTER_TOKEN=Go_123456
+      - TZ=Asia/Shanghai
+      # Terminal 默认用 bash（已确认终端确实跑在 bash 下）
+      - SHELL=/bin/bash
+    volumes:
+      - /vol1/1000/_0.DataStation/_0.dockerStation/sagemath_lvscript_docker/workspace:/home/sage/work
+      - /vol1/1000/_0.DataStation/_0.dockerStation/sagemath_lvscript_docker/sagemath_scienv_opt:/opt
+    # 不覆盖 entrypoint：保留镜像原始 tini -> docker-entrypoint.sh 链
+    # command：( 延迟注册脚本 ) & 独立后台跑；exec jupyter lab 成为 PID 1 前台保活
+    # ⚠️ 旧写法 "jupyter & sleep 15 && 脚本 && wait" 让 sh 当 PID1、jupyter 只是后台作业，
+    #    jupyter 一崩 wait 即返回 -> 容器重启 -> 所有终端/SSH 会话同时被端掉（约 sleep 15 后）。
+    command:
+      - sh
+      - -c
+      - "( sleep 15 && /opt/init_pythonEnvKernels.sh ) & exec jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --ServerApp.token=Go_123456"

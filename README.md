@@ -12,6 +12,7 @@ SageMath 镜像版本，附带一键构建、运行、迁移、测试脚本，�
 - 非 root 用户（`sage`，uid=1000）运行，方便 NAS 数据卷权限对齐
 - `tini` 作为 PID 1 + compose `init: true`，信号处理正确
 - JupyterLab 4 + SageMath 内核开箱即用，令牌鉴权
+- **v2.1 新增**：多 Python 环境内核自动注册（`scripts/init_pythonEnvKernels.sh` 扫描 `/opt/*env*` 并注册为 Jupyter kernel，FLAG 守卫只跑一次）+ 自定义 Launcher 图标（navy 艺术 Logo，见 `assets/`）+ 修复 Terminal / SSH 打开十几秒自动退出的容器重启循环
 - 一键脚本：`build.sh / run.sh / stop.sh / test.sh / security-scan.sh / push-images.sh`
 - 飞牛OS 专用部署手册与 systemd 可选自启单元
 - 集成 NVIDIA SkillSpector 安全扫描（静态分析 + 可选 LLM 语义分析）
@@ -23,6 +24,7 @@ SageMath 镜像版本，附带一键构建、运行、迁移、测试脚本，�
 |------|------|---------|
 | v1.1 | SageMath 9.5 + JupyterLab（debian12 生产版，修复归档加载问题） | [v1.1](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v1.1) |
 | **v2.0** | **v1.1 + 科学仪器数据分析环境（XRD/EDS/XAS）** | [v2.0](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v2.0) |
+| **v2.1** | **v2.0 + 多 Python 环境内核自动注册（sci-env venv）+ 自定义 Launcher 图标 + 修复 Terminal/SSH 自动退出** | [v2.1](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v2.1) |
 
 ## 镜像矩阵
 
@@ -45,10 +47,13 @@ sagemath-docker-fnOS/
 │   ├── fedora36/            # Fedora 36 版 (含 EOL 源切换)
 │   └── alpine/              # Alpine 实验版
 ├── scripts/                 # 构建/运行/停止/测试/安全扫描/推送脚本
+│                             #   + v2.1: init_pythonEnvKernels.sh / init-root.sh
 ├── tests/                   # 冒烟测试 (smoke.sh, math-check.sage, test-suite.py)
 ├── fnos/                    # 飞牛OS 部署手册、一键部署脚本、systemd 单元
 ├── docs/                    # QUICKSTART / MIGRATION / TESTING / SECURITY
+│   ├── JupyterLab多环境内核注册与使用方案.md  # v2.1 多内核注册与图标完整方案
 │   └── security/            # SkillSpector 扫描报告
+├── assets/                  # v2.1 自定义 Launcher 图标资源 (PNG/SVG)
 ├── docker-compose.yml       # 三套服务编排
 ├── .env.example             # 环境配置模板
 └── Makefile
@@ -90,6 +95,15 @@ cp .env.example .env
 浏览器访问 `http://<主机IP>:8888`，令牌见 `.env` 的 `JUPYTER_TOKEN`（默认 `sagemath`）。
 
 飞牛OS 详细步骤见 `fnos/fnos-notes.md`；迁移与测试见 `docs/` 目录。
+
+## v2.1：多 Python 环境内核注册与自定义 Launcher 图标
+
+在一个 JupyterLab 里同时调用 **SageMath 系统环境** 与 **sci-env（/opt/sci-env venv）** 等多套 Python 3.11，Launcher 显示自定义图标，并修复 Terminal/SSH 打开十几秒自动退出的问题。
+
+- 完整方案与排错：[`docs/JupyterLab多环境内核注册与使用方案.md`](docs/JupyterLab多环境内核注册与使用方案.md)（含 §13.4 终端自动退出踩坑、§11.6 图标自动注入）
+- 启动后自动注册 `/opt/*env*` 为 Jupyter kernel（FLAG 守卫）：[`scripts/init_pythonEnvKernels.sh`](scripts/init_pythonEnvKernels.sh)
+- 自定义图标资源（navy 艺术 Logo，PNG/SVG）：[`assets/`](assets/)
+- 运行时编排示例（预构建镜像 + `/opt` 绑定挂载 + `exec jupyter lab` 为 PID1）：[`deploy/docker-compose.scienv.example.yml`](deploy/docker-compose.scienv.example.yml)
 
 ## 测试
 
