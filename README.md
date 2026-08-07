@@ -8,7 +8,12 @@ SageMath 镜像版本，附带一键构建、运行、迁移、测试脚本，�
 ## 特性
 
 - 三种基础镜像、三个 SageMath 版本矩阵
-- **v2.0 新增**：科学仪器数据分析环境（XRD / EDS / XAS），详见 [docs/SCIENCE.md](docs/SCIENCE.md)
+- **v3.0 新增**：
+  - [修复] JupyterLab Launcher（Notebook/Console 栏）**缺失 sagemath 图标**问题
+    （双内核全局注册 + 官方 logo 图标，详见 [docs/SCIENCE.md](docs/SCIENCE.md)）
+  - [集成] 科学仪器数据分析环境（XRD / EDS / XAS），对齐
+    [pyXRD_EDS_XAS_Env](https://github.com/ljm820/pyXRD_EDS_XAS_Env) v1 + torch(CPU)
+  - [瘦身] 移除冗余大包（PySide6/open3d）并清理缓存，镜像再降约 30%
 - 非 root 用户（`sage`，uid=1000）运行，方便 NAS 数据卷权限对齐
 - `tini` 作为 PID 1 + compose `init: true`，信号处理正确
 - JupyterLab 4 + SageMath 内核开箱即用，令牌鉴权
@@ -23,8 +28,9 @@ SageMath 镜像版本，附带一键构建、运行、迁移、测试脚本，�
 | 版本 | 内容 | Release |
 |------|------|---------|
 | v1.1 | SageMath 9.5 + JupyterLab（debian12 生产版，修复归档加载问题） | [v1.1](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v1.1) |
-| **v2.0** | **v1.1 + 科学仪器数据分析环境（XRD/EDS/XAS）** | [v2.0](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v2.0) |
-| **v2.1** | **v2.0 + 多 Python 环境内核自动注册（sci-env venv）+ 自定义 Launcher 图标 + 修复 Terminal/SSH 自动退出** | [v2.1](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v2.1) |
+| v2.0 | v1.1 + 科学仪器数据分析环境（XRD/EDS/XAS） | [v2.0](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v2.0) |
+| v2.1 | v2.0 + 多 Python 环境内核自动注册（sci-env venv）+ 自定义 Launcher 图标 + 修复 Terminal/SSH 自动退出 | [v2.1](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v2.1) |
+| **v3.0** | **v2.0 + 修复 Launcher 缺失 sagemath 图标 + 对齐 pyXRD_EDS_XAS_Env v1 + 体积瘦身约 30%** | [v3.0](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v3.0) |
 
 ## 镜像矩阵
 
@@ -43,14 +49,14 @@ SageMath 镜像版本，附带一键构建、运行、迁移、测试脚本，�
 ```
 sagemath-docker-fnOS/
 ├── images/
-│   ├── debian12/            # Debian 12 版 Dockerfile + 入口脚本 + pip 依赖
+│   ├── debian12/            # Debian 12 版 Dockerfile + 入口脚本 + pip 依赖 + 内核图标
 │   ├── fedora36/            # Fedora 36 版 (含 EOL 源切换)
 │   └── alpine/              # Alpine 实验版
-├── scripts/                 # 构建/运行/停止/测试/安全扫描/推送脚本
+├── scripts/                 # 构建/运行/停止/测试/安全扫描/推送/组装脚本
 │                             #   + v2.1: init_pythonEnvKernels.sh / init-root.sh
-├── tests/                   # 冒烟测试 (smoke.sh, math-check.sage, test-suite.py)
+├── tests/                   # 冒烟测试 (smoke.sh, smoke-sci.sh, math-check.sage ...)
 ├── fnos/                    # 飞牛OS 部署手册、一键部署脚本、systemd 单元
-├── docs/                    # QUICKSTART / MIGRATION / TESTING / SECURITY
+├── docs/                    # QUICKSTART / SCIENCE / PUBLISH / TESTING / SECURITY
 │   ├── JupyterLab多环境内核注册与使用方案.md  # v2.1 多内核注册与图标完整方案
 │   └── security/            # SkillSpector 扫描报告
 ├── assets/                  # v2.1 自定义 Launcher 图标资源 (PNG/SVG)
@@ -61,26 +67,26 @@ sagemath-docker-fnOS/
 
 ## 快速开始（任意 Docker 主机）
 
-### 获取 v2.0 镜像（推荐：ghcr.io 直接拉取）
+### 获取 v3.0 镜像（推荐：ghcr.io 直接拉取）
 
 ```bash
-docker pull ghcr.io/ljm820/sagemath-docker-fnos:v2.0
-docker run -d -p 8888:8888 ghcr.io/ljm820/sagemath-docker-fnos:v2.0
+docker pull ghcr.io/ljm820/sagemath-docker-fnos:v3.0
+docker run -d -p 8888:8888 ghcr.io/ljm820/sagemath-docker-fnos:v3.0
 ```
 
 浏览器访问 `http://<主机IP>:8888`，访问令牌（Jupyter Token）为 `sagemath`。
 
-### 获取 v2.0 镜像（GitHub Release 分卷）
+### 获取 v3.0 镜像（GitHub Release 分卷）
 
-GitHub Release 单资产上限 2GB，v2.0 镜像压缩包 2.17GB 拆为 2 个分卷。
-下载 [v2.0 Release](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v2.0)
-下全部 2 个分卷后：
+GitHub Release 单资产上限 2GB，v3.0 镜像压缩包按卷拆分为多个分卷。
+下载 [v3.0 Release](https://github.com/ljm820/sagemath-docker-fnOS/releases/tag/v3.0)
+下全部 `part_*` 分卷后：
 
 ```bash
-cat sagemath9.5_deb12_julab_v2.0.tar.gz.part_aa sagemath9.5_deb12_julab_v2.0.tar.gz.part_ab \
-  > sagemath9.5_deb12_julab_v2.0.tar.gz
-sha256sum sagemath9.5_deb12_julab_v2.0.tar.gz   # 校验 bf293a61...
-docker load -i sagemath9.5_deb12_julab_v2.0.tar.gz
+cat sagemath9.5_deb12_julab_v3.0.tar.gz.part_00 sagemath9.5_deb12_julab_v3.0.tar.gz.part_01 \
+  > sagemath9.5_deb12_julab_v3.0.tar.gz
+sha256sum sagemath9.5_deb12_julab_v3.0.tar.gz   # 校验值见 Release 说明
+docker load -i sagemath9.5_deb12_julab_v3.0.tar.gz
 docker run -d -p 8888:8888 sagemath9.5_deb12_julab:latest
 ```
 
@@ -109,6 +115,7 @@ cp .env.example .env
 
 ```bash
 ./scripts/test.sh debian12           # 冒烟测试：版本/数学计算/脚本/Jupyter HTTP 200
+./scripts/test-sci.sh                # v3.0 科学环境测试（含 Launcher 图标回归）
 make test                            # 全部镜像
 ```
 
@@ -132,6 +139,7 @@ make test                            # 全部镜像
 - SageMath 官方项目：<https://github.com/sagemath/sage>
 - SageMath 容器参考（JupyterLab 整合）：<https://github.com/CCcat8059/sagemath>
 - SageMath 学习参考：<https://github.com/maxwellyu1024/sagemath_learning>
+- 科学仪器环境参考：<https://github.com/ljm820/pyXRD_EDS_XAS_Env>
 - NVIDIA SkillSpector：<https://github.com/nvidia/skillspector>
 
 ## 许可证

@@ -34,6 +34,8 @@ ase
 pymatgen==2025.10.7
 crystal-toolkit
 pymatviz
+# crystal_toolkit 模块级依赖 deltalake (mp-api 要求 <1.6.0), 固定 1.5.1
+deltalake==1.5.1
 
 # ---- 科学仪器数据格式读取 ----
 # RosettaSciIO + HyperSpy: 40+ 仪器格式自动化读取 (含 EDAX 等)
